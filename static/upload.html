@@ -4,16 +4,117 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Deep Dating</title>
+
+<style>
+
+body {
+    width: fit-content;
+    margin: 0 auto;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+#file-upload {
+    padding: 5em;
+    border: dashed 3px #ddd;
+    width:fit-content;
+    cursor: pointer;
+    display: block;
+}
+
+#file-upload.hasimage {
+    padding: 0;
+    border: 0;
+    max-width: 256px;
+}
+
+#file-upload.highlight {
+    border-color: red;
+}
+
+.radio-label {
+    cursor:pointer;
+    display:block;
+    width:fit-content;
+}
+
+input[type="submit"] {
+    cursor: pointer;
+    display: block;
+    border: none;
+    padding: 1em;
+    width: fit-content;
+    margin-top: 1em;
+    float: right;
+}
+</style>
 </head>
 <body>
-    <h1>Upload</h1>
+    <h1>Welcome to Deep Dating</h1>
     <form action="/upload" method="POST" enctype="multipart/form-data">
-        <input type="file" name="user_image"><br/>
-        What are you interested in?<br/>
-        <input type="radio" value="male" name="gender">Male<br/>
-        <input type="radio" value="female" name="gender">Female<br/>
+        <img id="file-upload" alt="Click or drag to upload a picture of yourself"></div>
+        <input id="file-input" type="file" name="user_image">
+        <p>What are you interested in?</p>
+        <label class="radio-label"><input type="radio" value="male" name="gender">Male</label>
+        <label class="radio-label"><input type="radio" value="female" name="gender">Female</label>
         <input type="submit" value="Submit">
     </form>
+
+<script>
+const uploadBtn = document.querySelector("#file-upload");
+const fileUpload = document.querySelector("#file-input");
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    uploadBtn.addEventListener(eventName, preventDefaults, false)
+})
+
+function preventDefaults(e) {
+    e.preventDefault()
+    e.stopPropagation()
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    uploadBtn.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    uploadBtn.addEventListener(eventName, unhighlight, false);
+});
+
+uploadBtn.addEventListener("drop", handleDrop);
+function handleDrop(e) {
+    let dt = e.dataTransfer
+    const [image] = dt.files;
+    fileUpload.files = dt.files;
+    if (image) {
+        uploadBtn.src = URL.createObjectURL(image);
+        uploadBtn.classList.add("hasimage");
+    }
+}
+
+function highlight(e) {
+    uploadBtn.classList.add('highlight')
+}
+
+function unhighlight(e) {
+    uploadBtn.classList.remove('highlight')
+}
+
+fileUpload.addEventListener("change", () => {
+    const [image] = fileUpload.files;
+    if (image) {
+        uploadBtn.src = URL.createObjectURL(image);
+        uploadBtn.classList.add("hasimage");
+    }
+});
+
+uploadBtn.addEventListener("click", () => {
+    fileUpload.click();
+})
+</script>
 </body>
 </html>

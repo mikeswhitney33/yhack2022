@@ -5,10 +5,8 @@ import base64
 import json
 import cv2 as cv
 import numpy as np
-from markupsafe import escape
 from face_recognition import face_distance, face_encodings, load_image_file
 import pandas as pd
-from sklearn.cluster import MiniBatchKMeans
 import pickle
 
 
@@ -36,22 +34,24 @@ def initialize_server():
 initialize_server()
 app = flask.Flask(__name__)
 
+@app.route("/reset")
+def reset():
+    global user_embedding, gender, swiped, last_embedding, decision_tracker
+    user_embedding = None
+    gender = None
+    swiped = set()
+    last_embedding = None
+    decision_tracker = []
+    return flask.redirect("/")
+
 @app.route("/")
 def index():
+    global user_embedding
     if user_embedding is None:
         return flask.send_from_directory("static", "upload.html")
     else:
         return flask.send_from_directory("static", "swipe.html")
 
-@app.route("/image/<imageid>")
-def image(imageid):
-    imageid = escape(imageid)
-    image = load_image_file(os.path.join("training_data", "img_align_celeba", f"{imageid}.jpg"))
-    retval, buffer = cv.imencode(".jpg", image[:,:,::-1])
-    b64 = base64.b64encode(buffer).decode("utf-8")
-    return {
-        "image": b64
-    }
 
 @app.route("/best_image/<yesno>", methods=("POST",))
 def best_image(yesno):
@@ -61,7 +61,9 @@ def best_image(yesno):
     global user_embedding
     global last_embedding
 
-    print(yesno)
+    if user_embedding is None:
+        return flask.redirect("/")
+
     yes_lr = 1e-2
     no_lr = 1e-3
     if yesno == "yes" and last_embedding is not None:
@@ -78,12 +80,13 @@ def best_image(yesno):
         user_embedding -= no_lr * direction
     with open("decisions.json", "w") as file:
         json.dump(decision_tracker, file)
-    print(user_embedding)
 
     filtered_list_attr: pd.DataFrame = list_attr.query(f"Male == {1 if gender == 'male' else -1}")
     filtered_list_attr: pd.DataFrame = filtered_list_attr.query(f"Attractive == 1")
+    filtered_list_attr: pd.DataFrame = filtered_list_attr.query(f"Blurry == -1")
 
     min_dist = np.inf
+    max_dist = 0
     closest_image_id = filtered_list_attr.iloc[0].name
     for i in range(len(filtered_list_attr)):
         image_id = filtered_list_attr.iloc[i].name
@@ -94,12 +97,24 @@ def best_image(yesno):
         if dist < min_dist:
             min_dist = dist
             closest_image_id = image_id
+        if dist > max_dist:
+            max_dist = dist
 
     swiped.add(closest_image_id)
     last_embedding = np.array(embeddings[closest_image_id])
 
-    image_key = os.path.splitext(closest_image_id)[0]
-    return flask.redirect(f"/image/{image_key}", code=302)
+    percent = 100 * (1 - min_dist / max_dist)
+
+    # image_key = os.path.splitext(closest_image_id)[0]
+
+    image = load_image_file(os.path.join("training_data", "img_align_celeba", closest_image_id))
+    retval, buffer = cv.imencode(".jpg", image[:,:,::-1])
+    b64 = base64.b64encode(buffer).decode("utf-8")
+    return {
+        "image": b64,
+        "distance": min_dist[0]
+    }
+    # return flask.redirect(f"/image/{image_key}", code=302)
 
 @app.route("/upload", methods=("POST", ))
 def upload():
