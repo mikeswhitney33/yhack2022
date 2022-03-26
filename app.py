@@ -81,7 +81,9 @@ def best_image(yesno):
     with open("decisions.json", "w") as file:
         json.dump(decision_tracker, file)
 
-    filtered_list_attr: pd.DataFrame = list_attr.query(f"Male == {1 if gender == 'male' else -1}")
+    filtered_list_attr = list_attr.copy()
+    if gender in ("male", "female"):
+        filtered_list_attr: pd.DataFrame = filtered_list_attr.query(f"Male == {1 if gender == 'male' else -1}")
     filtered_list_attr: pd.DataFrame = filtered_list_attr.query(f"Attractive == 1")
     filtered_list_attr: pd.DataFrame = filtered_list_attr.query(f"Blurry == -1")
 
