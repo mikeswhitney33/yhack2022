@@ -4,19 +4,83 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Deep Dating</title>
+<style>
+body {
+    text-align:center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+button {
+    margin: 0;
+    border: none;
+}
+
+#percent {
+    color: black;
+}
+.container {
+    width: fit-content;
+    margin: 0 auto;
+  position: relative;
+  text-align: center;
+  color: white;
+}
+
+#no-btn {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 436px;
+  background-color: red;
+  opacity: 0.1;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+#no-btn:hover {
+    opacity: 0.8;
+    transition: 0.3s ease-in-out;
+}
+
+#yes-btn {
+    position:absolute;
+    right: 0px;
+    top: 0px;
+    height: 436px;
+    background-color: green;
+    opacity: 0.1;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+#yes-btn:hover {
+    opacity: 0.8;
+    transition: 0.3s ease-in-out;
+}
+
+#home-btn {
+    cursor: pointer;
+}
+</style>
 </head>
 <body>
-    <h1>Swipe</h1>
-    <img id="swipe-image" src="/static/loading-love.gif">
-    <button id="yes-btn">Yes</button>
-    <button id="no-btn">No</button>
+    <h1 id="home-btn">Deep Dating</h1>
+    <div class="container">
+        <img width="356" height="436" id="swipe-image" src="/static/loading-love.gif">
+        <button id="no-btn">No</button>
+        <button id="yes-btn">Yes</button>
+        <div id="percent">
+
+        </div>
+    </div>
 </body>
 
 <script>
 const swipeImage = document.querySelector("#swipe-image");
 const yesBtn = document.querySelector("#yes-btn");
 const noBtn = document.querySelector("#no-btn");
+const percentElem = document.querySelector("#percent");
+const homeBtn = document.querySelector("#home-btn");
 
 yesBtn.addEventListener("click", () => {
     loadImage("yes");
@@ -26,13 +90,18 @@ noBtn.addEventListener("click", () => {
     loadImage("no");
 });
 
+homeBtn.addEventListener("click", () => {
+    window.location = "/reset";
+});
+
 function loadImage(yesno) {
     swipeImage.src = "/static/loading-love.gif";
-    let result = "";
+    percentElem.textContent = "";
     fetch(`/best_image/${yesno}`, {
         method: "POST"
     }).then(response => response.json()).then(data => {
-        swipeImage.src = `data:image/jpeg;base64, ${data.image}`
+        swipeImage.src = `data:image/jpeg;base64, ${data.image}`;
+        percentElem.textContent = `Distance: ${Math.round((data.distance + Number.EPSILON) * 100) / 100}`;
     });
 }
 loadImage("default")
