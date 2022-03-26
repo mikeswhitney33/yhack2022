@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Swipe</h1>
+    <img id="swipe-image" src="/static/loading-love.gif">
+    <button id="yes-btn">Yes</button>
+    <button id="no-btn">No</button>
+</body>
+
+<script>
+const swipeImage = document.querySelector("#swipe-image");
+const yesBtn = document.querySelector("#yes-btn");
+const noBtn = document.querySelector("#no-btn");
+
+yesBtn.addEventListener("click", () => {
+    loadImage("yes");
+});
+
+noBtn.addEventListener("click", () => {
+    loadImage("no");
+});
+
+function loadImage(yesno) {
+    swipeImage.src = "/static/loading-love.gif";
+    let result = "";
+    fetch(`/best_image/${yesno}`, {
+        method: "POST"
+    }).then(response => response.json()).then(data => {
+        swipeImage.src = `data:image/jpeg;base64, ${data.image}`
+    });
+}
+loadImage("default")
+</script>
+</html>

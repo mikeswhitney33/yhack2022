@@ -1,2 +1,4 @@
 /data
 /env
+/training_data
+/__pycache__
