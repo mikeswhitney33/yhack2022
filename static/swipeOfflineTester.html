@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Dating</title>
+<style>
+body {
+    text-align:center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+button {
+    margin: 0;
+    border: none;
+}
+
+#percent {
+    color: black;
+}
+.container {
+    width: fit-content;
+    margin: 0 auto;
+  position: relative;
+  text-align: center;
+  color: white;
+}
+
+#no-btn {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 436px;
+  background-color: red;
+  opacity: 0.1;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+#no-btn:hover {
+    opacity: 0.8;
+    transition: 0.3s ease-in-out;
+}
+
+#yes-btn {
+    position:absolute;
+    right: 0px;
+    top: 0px;
+    height: 436px;
+    background-color: green;
+    opacity: 0.1;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+#yes-btn:hover {
+    opacity: 0.8;
+    transition: 0.3s ease-in-out;
+}
+
+#home-btn {
+    cursor: pointer;
+}
+
+
+</style>
+</head>
+<body>
+    <h1 id="home-btn">Deep Dating</h1>
+    <div class="container">
+        <img width="356" height="436" id="swipe-image" src="/static/loading-love.gif">
+        <button id="no-btn">No</button>
+        <button id="yes-btn">Yes</button>
+        <div id="percent">
+
+        </div>
+    </div>
+</body>
+
+<script>
+const swipeImage = document.querySelector("#swipe-image");
+const yesBtn = document.querySelector("#yes-btn");
+const noBtn = document.querySelector("#no-btn");
+const percentElem = document.querySelector("#percent");
+const homeBtn = document.querySelector("#home-btn");
+//readyToSwitch = true;
+
+yesBtn.addEventListener("click", () => {
+    //loadImage("yes");
+    //loadOffline();
+    animateImageTransition("right");
+});
+
+noBtn.addEventListener("click", () => {
+    //loadImage("no");
+    //loadOffline();
+    animateImageTransition("left");
+});
+
+homeBtn.addEventListener("click", () => {
+    window.location = "/reset";
+});
+
+//#swipe-image {
+  //transition: transform .5s;
+//}
+async function animateImageTransition(direction) {
+  var magnitude = 0;
+  var duration = .5;
+  var opacity = 50;
+  if(direction == "right" || direction == "yes") {
+    magnitude = 1;
+  } else if (direction == "left" || direction == "no") {
+    magnitude = -1;
+  }
+
+  swipeImage.style.transition = "transform "+duration+"s, opacity "+duration+"s";
+  swipeImage.style.transform = 'translateX('+magnitude+'em)';
+  swipeImage.style.opacity = opacity+"%";
+  setTimeout(() => {
+    swipeImage.style.transition = "";
+    swipeImage.style.transform = 'translateX(0)';
+    swipeImage.style.opacity = "100%";
+    swipeImage.src = "/static/loading-love.gif";
+    loadOffline();
+    //readyToSwitch = true;
+  }, duration*1000);
+  // move back to center before loadingImage
+  //swipeImage.style.transition = "transform .5s";
+  // TODO set a variable to indicate that the image is ready to change, so as to avoid a race condition
+  // swipeImage.src = "/static/loading-love.gif";
+}
+
+function loadImage(yesno) {
+    swipeImage.src = "/static/loading-love.gif";
+    percentElem.textContent = "";
+    fetch(`/best_image/${yesno}`, {
+        method: "POST"
+    }).then(response => response.json()).then(data => {
+        swipeImage.src = `data:image/jpeg;base64, ${data.image}`;
+        percentElem.textContent = `Distance: ${Math.round((data.distance + Number.EPSILON) * 100) / 100}`;
+    });
+}
+//loadImage("default")
+var placeholderNum = 1;
+function loadOffline() {
+  //while(!readyToSwitch) {
+  //  setTimeout(()=>{}, 50); // wait 50 ms
+//  }
+  swipeImage.src="/static/loading-love.gif";
+  percentElem.textContent = "";
+  if (placeholderNum == 1) {
+    swipeImage.src = "placeholder2.JPG";
+    placeholderNum = 2;
+  } else {
+    swipeImage.src = "placeholder.JPG";
+    placeholderNum = 1;
+  }
+  //readyToSwitch = false;
+}
+loadOffline();
+</script>
+</html>
